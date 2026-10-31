@@ -1,0 +1,14 @@
+[project]
+name = "your-project-name"
+version = "0.1.0"
+description = "Your project description"
+requires-python = ">=3.11"
+dependencies = [
+    # Add your production dependencies here (e.g., "requests", "fastapi")
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "flake8>=7.0.0",
+]
