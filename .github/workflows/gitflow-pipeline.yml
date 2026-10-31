@@ -19,46 +19,23 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11' # Match your project's version
-          cache: 'pip'          # Speeds up subsequent runs
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      # 1. Install uv automatically using the official GitHub Action
+      # Install uv automatically using the official GitHub Action
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
         with:
-          enable-cache: true # Automatically handles fast workflow caching
+          enable-cache: true # Handles fast workflow caching across runs
 
-      # 2. Install dependencies directly from your pyproject.toml
-      - name: Install Dependencies
-        run: |
-          uv pip install flake8 pytest
-          if [ -f pyproject.toml ]; then uv pip install .; fi
-
+      # Run linting instantly using uvx (no manual installs needed)
       - name: Lint Code with Flake8
         run: |
-          uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          uvx flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          uvx flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # 3. Run tests using uv run
+      # Run tests using uv run (automatically reads your pyproject.toml)
       - name: Run Tests with Pytest
         run: |
           uv run pytest
-
-
-      - name: Lint Code with Flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings.
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Run Tests with Pytest
-        run: |
-          pytest
 
   # JOB 2: Deploy to Development / Staging Environment
   deploy-staging:
@@ -72,10 +49,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - name: Deploy to Staging
         run: |
           echo "Deploying Python application to the STAGING environment..."
-          # Replace this line with your actual staging deployment commands
+          # Replace this line with your actual staging deployment commands 
+          # Example: uv run fab deploy_staging or your custom script
 
   # JOB 3: Deploy to Production Environment
   deploy-production:
@@ -87,7 +70,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
       - name: Deploy to Production
         run: |
           echo "Deploying Python application to the PRODUCTION environment..."
           # Replace this line with your actual production deployment commands
+          # Example: uv run fab deploy_production or your cloud CLI tool
