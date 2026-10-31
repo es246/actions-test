@@ -1,0 +1,71 @@
+name: Python Gitflow CI/CD
+
+on:
+  # Triggers for running tests on code changes
+  push:
+    branches: [ main, develop, 'release/*', 'hotfix/*' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # JOB 1: Test & Quality Control (Runs on EVERY branch/PR)
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Match your project's version
+          cache: 'pip'          # Speeds up subsequent runs
+
+      - name: Install Dependencies
+        run: |
+          python -m pip upgrade pip
+          pip install flake8 pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Lint Code with Flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings.
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run Tests with Pytest
+        run: |
+          pytest
+
+  # JOB 2: Deploy to Development / Staging Environment
+  deploy-staging:
+    needs: test-and-lint
+    # Runs only if tests pass AND code is pushed to develop or a release branch
+    if: |
+      github.event_name == 'push' && 
+      (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Staging
+        run: |
+          echo "Deploying Python application to the STAGING environment..."
+          # Replace this line with your actual staging deployment commands
+
+  # JOB 3: Deploy to Production Environment
+  deploy-production:
+    needs: test-and-lint
+    # Runs only if tests pass AND code is safely merged/pushed into main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production
+        run: |
+          echo "Deploying Python application to the PRODUCTION environment..."
+          # Replace this line with your actual production deployment commands
