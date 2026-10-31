@@ -21,11 +21,33 @@ jobs:
           python-version: '3.11' # Match your project's version
           cache: 'pip'          # Speeds up subsequent runs
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 1. Install uv automatically using the official GitHub Action
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true # Automatically handles fast workflow caching
+
+      # 2. Install dependencies directly from your pyproject.toml
       - name: Install Dependencies
         run: |
-          python -m pip --upgrade pip
-          pip install flake8 pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          uv pip install flake8 pytest
+          if [ -f pyproject.toml ]; then uv pip install .; fi
+
+      - name: Lint Code with Flake8
+        run: |
+          uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      # 3. Run tests using uv run
+      - name: Run Tests with Pytest
+        run: |
+          uv run pytest
+
 
       - name: Lint Code with Flake8
         run: |
